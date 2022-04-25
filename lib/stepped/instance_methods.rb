@@ -1,5 +1,5 @@
 module Stepped
-  module InstanceMethods
+  module InstanceMethods # rubocop:disable Metrics/ModuleLength
     def initialize(*params, **options)
       @definitions = {}
 
@@ -13,18 +13,42 @@ module Stepped
       @result = @args_for_next_step = nil
 
       if wrapper
-        wrapper.call do
-          process
-        end
+        process(before_wrap_steps)
+        wrapper.call { process(wrap_steps) }
+        process(after_wrap_steps)
       else
-        process
+        process(steps)
       end
 
       logger_instance.on_end(@result)
       @result
     end
 
-    def process
+    def before_wrap_steps
+      @before_wrap_steps ||= begin
+        values = {}
+        steps.each do |step_name, step_def|
+          break if wrap_only.include?(step_name)
+
+          values[step_name] = step_def
+        end
+        values
+      end
+    end
+
+    def wrap_steps
+      @wrap_steps ||= steps.filter do |step_name, _step_def|
+        !before_wrap_steps.key?(step_name) && wrap_only.include?(step_name)
+      end
+    end
+
+    def after_wrap_steps
+      @after_wrap_steps ||= steps.filter do |step_name, _step_def|
+        !before_wrap_steps.key?(step_name) && !wrap_steps.key?(step_name)
+      end
+    end
+
+    def process(steps)
       steps.each do |name, defs|
         args = args_for_step(name, defs)
         @result = instance_exec(*args, &defs[:block])
@@ -97,7 +121,7 @@ module Stepped
     # define instance readers for class methods
     %i[
       steps common_error_handler reraise
-      stop_on_failure logger_instance wrapper
+      stop_on_failure logger_instance wrapper wrap_only
     ].each do |method_name|
       define_method(method_name) do |*args|
         self.class.send(method_name, *args)

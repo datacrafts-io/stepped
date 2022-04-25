@@ -1,7 +1,8 @@
 module Stepped
   module ClassMethods
     attr_reader :steps, :common_error_handler, :reraise, :stop_on_failure,
-                :params_defs, :options_defs, :logger_instance, :wrapper
+                :params_defs, :options_defs, :logger_instance,
+                :wrapper, :wrap_only
 
     def call(*params, **options)
       new(*params, **options).call
@@ -55,8 +56,9 @@ module Stepped
       @stop_on_failure = stop
     end
 
-    def wrap(wrapper)
+    def wrap(wrapper, only: [])
       @wrapper = wrapper
+      @wrap_only = only
     end
 
     def logger(on_start: false,

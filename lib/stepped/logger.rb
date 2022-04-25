@@ -2,6 +2,10 @@ module Stepped
   class Logger
     attr_reader :class_name, :config
 
+    def initialize
+      @config = {}
+    end
+
     def setup(class_name:, **config)
       @class_name = class_name
       @config = config.symbolize_keys || {}

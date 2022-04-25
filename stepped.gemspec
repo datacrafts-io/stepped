@@ -23,6 +23,7 @@ Gem::Specification.new do |gem|
   gem.require_paths = %w[lib]
 
   gem.add_development_dependency "bundler", ">= 1.16"
+  gem.add_development_dependency "pry"
   gem.add_development_dependency "rake", ">= 10.0"
   gem.add_development_dependency "rspec"
   gem.add_development_dependency "rubocop"
